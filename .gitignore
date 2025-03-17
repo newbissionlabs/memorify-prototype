@@ -1,0 +1,42 @@
+# Python bytecode files
+*.pyc
+*.pyo
+__pycache__/
+
+# Virtual environment
+.env/
+.venv/
+env/
+env3/
+venv/
+
+# VS Code settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# FastAPI-related
+*.db
+*.sqlite3
+*.log
+*.env
+
+# Test coverage
+.coverage
+.coverage.*
+nosetests.xml
+pytest.xml
+*pytest*
+*.coveragerc
+
+# Build files
+build/
+dist/
+*.egg-info/
+
+# macOS files
+.DS_Store
+
+# Windows files
+Thumbs.db
