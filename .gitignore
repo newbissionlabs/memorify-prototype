@@ -22,6 +22,9 @@ venv/
 *.log
 *.env
 
+# Alembic
+alembic.ini
+
 # Test coverage
 .coverage
 .coverage.*

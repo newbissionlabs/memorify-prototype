@@ -1,6 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlmodel import Session
+from app.database import get_session
+from app.schemas import UserCreate as user_create_schema
+from app.models import User
 
-router = APIRouter()
+router = APIRouter(prefix="/v1")
 
 
 # 로그인
@@ -11,8 +15,15 @@ async def login():
 
 # 회원가입
 @router.post("/auth/signup", tags=["auth"])
-async def signup():
-    return {"회원가입": False}
+async def signup(*, session: Session = Depends(get_session), data: user_create_schema):
+    validate_data = user_create_schema.model_validate(data)
+    user = User(**validate_data.model_dump())
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    # return {"회원가입": False}
+    print(user)
+    return user
 
 
 # 단어 등록(여러 단어 한 번에 가능)
