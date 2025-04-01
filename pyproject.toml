@@ -1,0 +1,30 @@
+[tool.isort]
+profile = "black"
+line_length = 88
+known_third_party = ["fastapi", "httpx", "sqlalchemy", "sqlmodel", "cryptography", "pyjwt", "dotenv", "psycopg2-binary"]
+
+[tool.flake8]
+exclude = [
+    ".git",
+    ".gitignore",
+    "*.pot",
+    "*.py[co]",
+    "__pycache__",
+    ".venv",
+    ".env",
+    "alembic"
+]
+
+ignore = ["W291", "E128", "E501"]
+
+[tool.black]
+line-length = 88
+target-version = ['py312']  # 원하는 파이썬 버전으로 조정
+skip-string-normalization = true
+exclude = '''
+/(
+    .git
+  | .venv
+  | alembic
+)/
+'''
