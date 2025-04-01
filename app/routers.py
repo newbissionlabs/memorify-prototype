@@ -1,8 +1,19 @@
-from fastapi import APIRouter, Depends
+import base64
+import os
+
+# JWT
+import jwt
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from fastapi import APIRouter, Depends, status
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
-from app.database import get_session
-from app.schemas import UserCreate as user_create_schema
+
+from app.database import DBHandler
 from app.models import User
+from app.schemas import UserCreate as user_create_schema
+from app.secrets import AES_SECRET_KEY, JWT_SECRET_KEY
 
 router = APIRouter(prefix="/v1")
 
@@ -13,16 +24,92 @@ async def login():
     return {"로그인": False}
 
 
+class JWTHandler:
+    secret_key = JWT_SECRET_KEY
+    encryption_key = base64.b64decode(AES_SECRET_KEY)
+
+    # AES로 유저 ID 암호화 함수
+    @classmethod
+    def encrypt_user_id(cls, user_id: int) -> str:
+        nonce = os.urandom(12)
+        cipher = Cipher(
+            algorithms.AES(cls.encryption_key),
+            modes.GCM(nonce),
+            backend=default_backend(),
+        )
+        encryptor = cipher.encryptor()
+        ciphertext = encryptor.update(str(user_id).encode()) + encryptor.finalize()
+        encrypted_data = nonce + encryptor.tag + ciphertext
+        return base64.b64encode(encrypted_data).decode("utf-8")
+
+    # AES로 암호화된 유저 ID 복호화 함수
+    @classmethod
+    def decrypt_user_id(cls, encrypted_data: str) -> str:
+        encrypted_data = base64.b64decode(encrypted_data)
+        nonce, tag, ciphertext = (
+            encrypted_data[:12],
+            encrypted_data[12:28],
+            encrypted_data[28:],
+        )
+        cipher = Cipher(
+            algorithms.AES(cls.encryption_key),
+            modes.GCM(nonce, tag),
+            backend=default_backend(),
+        )
+        decryptor = cipher.decryptor()
+        decrypted = decryptor.update(ciphertext) + decryptor.finalize()
+        return decrypted.decode()
+
+    # JWT 생성 (유저 ID 암호화하여 저장)
+    @classmethod
+    def create_jwt(cls, id: int) -> str:
+        encrypted_user_id = cls.encrypt_user_id(id)
+        print(encrypted_user_id)
+        payload = {"id": encrypted_user_id}
+        token = jwt.encode(payload, cls.secret_key, algorithm="HS256")
+        return token
+
+
 # 회원가입
-@router.post("/auth/signup", tags=["auth"])
-async def signup(*, session: Session = Depends(get_session), data: user_create_schema):
-    validate_data = user_create_schema.model_validate(data)
-    user = User(**validate_data.model_dump())
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    # return {"회원가입": False}
-    print(user)
+@router.post(
+    "/auth/signup",
+    status_code=201,
+    tags=["auth"],
+    responses={
+        400: {
+            "description": "Bad Request - Duplicate entry or invalid data",
+            "content": {
+                "application/json": {
+                    "example": {"error": {"code": 23505, "detail": "Exsists user_id"}}
+                }
+            },
+        }
+    },
+)
+async def signup(
+    *, db: Session = Depends(DBHandler.get_session), data: user_create_schema
+):
+    token = JWTHandler.create_jwt(4)
+    encoded_id = jwt.decode(token, JWTHandler.secret_key, algorithms=["HS256"]).get(
+        "id"
+    )
+    decode_id = JWTHandler.decrypt_user_id(encoded_id)
+    print(decode_id)
+    return token
+    try:
+        user = User(**data.model_dump())
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    except IntegrityError as e:
+        db.rollback()
+        error = DBHandler.get_error_details(e)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content={"error": error}
+        )
+
+    # 회원 가입이 완료되었으니 JWT 생성
+
     return user
 
 

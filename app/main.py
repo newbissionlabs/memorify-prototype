@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from .routers import router
-from .secrets import DOCS_PREFIX
+from app.routers import router
+from app.secrets import DOCS_PREFIX
 
 app = FastAPI(
     docs_url=DOCS_PREFIX + "/docs",
