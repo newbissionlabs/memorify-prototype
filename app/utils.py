@@ -1,8 +1,9 @@
 # crypto_handler.py
-from cryptography.fernet import Fernet
-import jwt
-from uuid import uuid4
 from datetime import datetime, timedelta, timezone
+from uuid import uuid4
+
+import jwt
+from cryptography.fernet import Fernet
 
 # from app.secrets import FERNET_KEY
 
