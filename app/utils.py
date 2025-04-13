@@ -5,7 +5,7 @@ from uuid import uuid4
 import jwt
 from cryptography.fernet import Fernet
 
-# from app.secrets import FERNET_KEY
+from app.secrets import FERNET_KEY, JWT_SECRET_KEY
 
 # TODO: key값들 secret에 저장된 값들로 바꿔놓기
 # TODO: 생성된 refresh_token의 jti를 whitelist에 추가할것
@@ -13,7 +13,8 @@ from cryptography.fernet import Fernet
 
 
 class EncryptionHandler:
-    __fernet_key = Fernet.generate_key()
+    # __fernet_key = Fernet.generate_key()
+    __fernet_key = FERNET_KEY.encode()
     __fernet = Fernet(__fernet_key)
 
     @classmethod
@@ -30,10 +31,11 @@ class EncryptionHandler:
 
 
 class JWTHandler:
-    __secret_key = Fernet.generate_key()
+    # __secret_key = Fernet.generate_key()
+    __secret_key = JWT_SECRET_KEY
 
     @classmethod
-    def get_new_jwt(cls, payload: dict) -> dict:
+    def get_new_tokens(cls, payload: dict) -> dict:
         refresh_token = cls.create_refresh_token(payload)
         access_token = cls.create_access_token(refresh_token)
         encrypted_refresh_token = EncryptionHandler.encrypt(refresh_token)
@@ -45,8 +47,8 @@ class JWTHandler:
         }
 
     @classmethod
-    def create_jti(cls, user_id):
-        return f"{user_id}-{uuid4()}"
+    def create_jti(cls, id):
+        return f"{id}-{uuid4()}"
 
     @classmethod
     def create_refresh_token(cls, payload: str) -> str:
@@ -63,7 +65,7 @@ class JWTHandler:
         refresh_payload = {
             **payload,
             "type": "refresh",
-            "jti": cls.create_jti(payload["user_id"]),
+            "jti": cls.create_jti(payload["id"]),
             "iat": int(now_utc.timestamp()),
             "exp": int((now_utc + timedelta(days=7)).timestamp()),
         }
@@ -86,7 +88,7 @@ class JWTHandler:
             access_payload = {
                 **payload,
                 "type": "access",
-                "jti": cls.create_jti(payload["user_id"]),
+                "jti": cls.create_jti(payload["id"]),
                 "iat": int(now_utc.timestamp()),
                 "exp": int((now_utc + timedelta(minutes=15)).timestamp()),
             }
@@ -103,6 +105,6 @@ class JWTHandler:
 
     @classmethod
     def refresh_access_token(cls, refresh_token: str) -> str:
-        decoded_refresh_token = EncryptionHandler.decrypt(refresh_token)
-        new_access_token = cls.create_access_token(decoded_refresh_token)
+        decrypted_refresh_token = EncryptionHandler.decrypt(refresh_token)
+        new_access_token = cls.create_access_token(decrypted_refresh_token)
         return EncryptionHandler.encrypt(new_access_token)

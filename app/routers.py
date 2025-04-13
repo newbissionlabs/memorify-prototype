@@ -2,72 +2,43 @@ import base64
 import os
 
 # JWT
-import jwt
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.database import DBHandler
 from app.models import User
 from app.schemas import UserCreate as user_create_schema
-from app.secrets import AES_SECRET_KEY, JWT_SECRET_KEY
+from app.schemas import UserLogin as user_login_schema
+from app.utils import JWTHandler as jwthandler
 
 router = APIRouter(prefix="/v1")
 
 
 # 로그인
 @router.post("/auth/login", tags=["auth"])
-async def login():
-    return {"로그인": False}
-
-
-class JWTHandler:
-    secret_key = JWT_SECRET_KEY
-    encryption_key = base64.b64decode(AES_SECRET_KEY)
-
-    # AES로 유저 ID 암호화 함수
-    @classmethod
-    def encrypt_user_id(cls, user_id: int) -> str:
-        nonce = os.urandom(12)
-        cipher = Cipher(
-            algorithms.AES(cls.encryption_key),
-            modes.GCM(nonce),
-            backend=default_backend(),
+async def login(
+    *, db: Session = Depends(DBHandler.get_session), data: user_login_schema
+):
+    try:
+        user = db.exec(
+            select(User).where(
+                User.user_id == data.user_id, User.password == data.password
+            )
+        ).first()
+    except IntegrityError as e:
+        db.rollback()
+        error = DBHandler.get_error_details(e)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content={"error": error}
         )
-        encryptor = cipher.encryptor()
-        ciphertext = encryptor.update(str(user_id).encode()) + encryptor.finalize()
-        encrypted_data = nonce + encryptor.tag + ciphertext
-        return base64.b64encode(encrypted_data).decode("utf-8")
 
-    # AES로 암호화된 유저 ID 복호화 함수
-    @classmethod
-    def decrypt_user_id(cls, encrypted_data: str) -> str:
-        encrypted_data = base64.b64decode(encrypted_data)
-        nonce, tag, ciphertext = (
-            encrypted_data[:12],
-            encrypted_data[12:28],
-            encrypted_data[28:],
-        )
-        cipher = Cipher(
-            algorithms.AES(cls.encryption_key),
-            modes.GCM(nonce, tag),
-            backend=default_backend(),
-        )
-        decryptor = cipher.decryptor()
-        decrypted = decryptor.update(ciphertext) + decryptor.finalize()
-        return decrypted.decode()
+    # 로그인에 성공했으니 JWT 생성
+    payload = {"id": user.id}
+    tokens = jwthandler.get_new_tokens(payload)
 
-    # JWT 생성 (유저 ID 암호화하여 저장)
-    @classmethod
-    def create_jwt(cls, id: int) -> str:
-        encrypted_user_id = cls.encrypt_user_id(id)
-        print(encrypted_user_id)
-        payload = {"id": encrypted_user_id}
-        token = jwt.encode(payload, cls.secret_key, algorithm="HS256")
-        return token
+    return tokens
 
 
 # 회원가입
@@ -89,13 +60,6 @@ class JWTHandler:
 async def signup(
     *, db: Session = Depends(DBHandler.get_session), data: user_create_schema
 ):
-    token = JWTHandler.create_jwt(4)
-    encoded_id = jwt.decode(token, JWTHandler.secret_key, algorithms=["HS256"]).get(
-        "id"
-    )
-    decode_id = JWTHandler.decrypt_user_id(encoded_id)
-    print(decode_id)
-    return token
     try:
         user = User(**data.model_dump())
         db.add(user)
@@ -109,14 +73,20 @@ async def signup(
         )
 
     # 회원 가입이 완료되었으니 JWT 생성
+    payload = {"id": user.id}
+    tokens = jwthandler.get_new_tokens(payload)
 
-    return user
+    return tokens
 
 
 # 단어 등록(여러 단어 한 번에 가능)
 @router.post("/words", tags=["words"])
-async def register_words():
-    return {"단어등록": False}
+async def register_words(data: list[str]):
+    """
+    data: JSON [word, word, word, ....]
+    """
+    
+    return {"단어등록": data}
 
 
 # 단어상태변경(여러 단어 한 번에 가능)

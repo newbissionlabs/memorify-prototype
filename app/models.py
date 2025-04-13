@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 
 
 class BaseModel(SQLModel):
@@ -28,3 +28,29 @@ class User(BaseModel, table=True):
     user_id: str = Field(..., max_length=20, unique=True, index=True)
     password: str = Field(..., max_length=20)
     name: str = Field(default="anonymous", max_length=20)
+
+    words: list["UserWord"] = Relationship(back_populates="user_rel")
+
+
+class Word(BaseModel, table=True):
+    """
+    현재는 프로토타입이므로 English Only로 만듦
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    word: str = Field(..., index=True)
+
+    users: list["UserWord"] = Relationship(back_populates="word_rel")
+
+
+class UserWord(BaseModel, table=True):
+    """
+    유저별로 등록한 단어 관계 테이블
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    user: int = Field(foreign_key="user.id")
+    word: int = Field(foreign_key="word.id")
+
+    users: "User" = Relationship(back_populates="words")
+    words: "Word" = Relationship(back_populates="users")
