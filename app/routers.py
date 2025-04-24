@@ -2,7 +2,7 @@ import base64
 import os
 
 # JWT
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status, Request, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -12,6 +12,7 @@ from app.models import User
 from app.schemas import UserCreate as user_create_schema
 from app.schemas import UserLogin as user_login_schema
 from app.utils import JWTHandler as jwthandler
+from app.config import constants
 
 router = APIRouter(prefix="/v1")
 
@@ -37,8 +38,10 @@ async def login(
     # 로그인에 성공했으니 JWT 생성
     payload = {"id": user.id}
     tokens = jwthandler.get_new_tokens(payload)
-
-    return tokens
+    response = JSONResponse(content=tokens)
+    response.set_cookie(key=constants.access_token, value=tokens.get("access_token"))
+    response.set_cookie(key=constants.refresh_token, value=tokens.get("refresh_token"))
+    return response
 
 
 # 회원가입
@@ -86,6 +89,7 @@ async def register_words(data: list[str]):
     data: JSON [word, word, word, ....]
     """
     
+
     return {"단어등록": data}
 
 

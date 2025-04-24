@@ -6,6 +6,7 @@ import jwt
 from cryptography.fernet import Fernet
 
 from app.secrets import FERNET_KEY, JWT_SECRET_KEY
+from app.config import constants
 
 # TODO: key값들 secret에 저장된 값들로 바꿔놓기
 # TODO: 생성된 refresh_token의 jti를 whitelist에 추가할것
