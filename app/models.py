@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
+from enum import Enum
 
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class BaseModel(SQLModel):
@@ -29,7 +30,7 @@ class User(BaseModel, table=True):
     password: str = Field(..., max_length=20)
     name: str = Field(default="anonymous", max_length=20)
 
-    words: list["UserWord"] = Relationship(back_populates="user_rel")
+    words: list["UserWord"] = Relationship(back_populates="users")
 
 
 class Word(BaseModel, table=True):
@@ -38,9 +39,18 @@ class Word(BaseModel, table=True):
     """
 
     id: int | None = Field(default=None, primary_key=True)
-    word: str = Field(..., index=True)
+    word: str = Field(..., index=True, unique=True)
+    meaning: str | None = Field(default=None)
+    pronunciation: str | None = Field(default=None)
 
-    users: list["UserWord"] = Relationship(back_populates="word_rel")
+    users: list["UserWord"] = Relationship(back_populates="words")
+
+
+class WordStatusEnum(str, Enum):
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+    AMBIGUOUS = "ambiguous"
 
 
 class UserWord(BaseModel, table=True):
@@ -51,6 +61,7 @@ class UserWord(BaseModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     user: int = Field(foreign_key="user.id")
     word: int = Field(foreign_key="word.id")
+    status: WordStatusEnum
 
-    users: "User" = Relationship(back_populates="words")
-    words: "Word" = Relationship(back_populates="users")
+    users: User = Relationship(back_populates="words")
+    words: Word = Relationship(back_populates="users")
