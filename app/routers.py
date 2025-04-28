@@ -2,17 +2,17 @@ import base64
 import os
 
 # JWT
-from fastapi import APIRouter, Depends, status, Request, Response
+from fastapi import APIRouter, Depends, Request, Response, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
+from app.config import constants
 from app.database import DBHandler
 from app.models import User
 from app.schemas import UserCreate as user_create_schema
 from app.schemas import UserLogin as user_login_schema
 from app.utils import JWTHandler as jwthandler
-from app.config import constants
 
 router = APIRouter(prefix="/v1")
 
@@ -88,7 +88,6 @@ async def register_words(data: list[str]):
     """
     data: JSON [word, word, word, ....]
     """
-    
 
     return {"단어등록": data}
 
