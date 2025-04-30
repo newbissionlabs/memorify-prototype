@@ -16,6 +16,8 @@ from app.utils import JWTHandler as jwthandler
 
 router = APIRouter(prefix="/v1")
 
+# TODO: JWT 검증하는 미들웨어 만들어야할 거같음 일단은 Depends로 쓰게 함수로다가....
+
 
 # 로그인
 @router.post("/auth/login", tags=["auth"])
@@ -84,10 +86,17 @@ async def signup(
 
 # 단어 등록(여러 단어 한 번에 가능)
 @router.post("/words", tags=["words"])
-async def register_words(data: list[str]):
+async def register_words(
+    *, db: Session = Depends(DBHandler.get_session), data: list[str]
+):
     """
     data: JSON [word, word, word, ....]
     """
+    # 1. 단어마다 db에 있는지 조회 (get_or_create)
+    for word in data:
+        print(word)
+    # 2. user_word에 추가하기
+    # 3. 하나라도 삑사리나면 rollback?
 
     return {"단어등록": data}
 

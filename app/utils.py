@@ -12,6 +12,7 @@ from app.secrets import FERNET_KEY, JWT_SECRET_KEY
 # TODO: 생성된 refresh_token의 jti를 whitelist에 추가할것
 # TODO: 기기별(브라우저별)) 로그인을 관리하기 위해 id 부여하고 요청헤더 또는 쿠키에 같이 전송될 수 있도록 관리
 
+# TODO: jwt 디코딩해서 payload 넘기는 함수 만들기
 
 class EncryptionHandler:
     # __fernet_key = Fernet.generate_key()
