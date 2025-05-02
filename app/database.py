@@ -13,6 +13,8 @@ class DBHandler:
     @classmethod
     def get_error_details(cls, error: IntegrityError):
         code = None
+        detail = None
+
         if isinstance(error, IntegrityError):
             error = error.orig
         if isinstance(error, pgerror):
