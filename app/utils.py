@@ -14,6 +14,7 @@ from app.secrets import FERNET_KEY, JWT_SECRET_KEY
 
 # TODO: jwt 디코딩해서 payload 넘기는 함수 만들기
 
+
 class EncryptionHandler:
     # __fernet_key = Fernet.generate_key()
     __fernet_key = FERNET_KEY.encode()
@@ -59,8 +60,7 @@ class JWTHandler:
 
         - jti: 토큰 식별 id
         - token_type(type): refresh 고정
-        - iat: 토큰 생성 시간
-        - exp: 토큰 만료 시간
+        - iat: 토큰 생성 시간                                                                                                                                                                                                                                                                                                                                                                                                                 
         """
         now_utc: datetime = datetime.now(timezone.utc)
 
@@ -110,3 +110,8 @@ class JWTHandler:
         decrypted_refresh_token = EncryptionHandler.decrypt(refresh_token)
         new_access_token = cls.create_access_token(decrypted_refresh_token)
         return EncryptionHandler.encrypt(new_access_token)
+
+    @classmethod
+    def get_paload(cls, token: str) -> dict:
+        decrypted_token = EncryptionHandler.decrypt(token)
+        

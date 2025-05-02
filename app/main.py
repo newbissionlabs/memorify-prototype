@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.middlewares import JWTMiddleware
 from app.routers import router
 from app.secrets import DOCS_PREFIX
 
@@ -17,3 +18,6 @@ def root_handler():
 
 
 app.include_router(router)
+
+# jwt 인증의 경우 필요한 엔드포인트에서 Depends로 처리하는 것으로 변경
+# app.add_middleware(JWTMiddleware)

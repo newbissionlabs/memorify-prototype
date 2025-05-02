@@ -31,6 +31,7 @@ async def login(
             )
         ).first()
     except IntegrityError as e:
+        print("@@@@@@@@@@@@@@@@fail@@@@@@@@@@@@@@")
         db.rollback()
         error = DBHandler.get_error_details(e)
         return JSONResponse(
@@ -41,8 +42,8 @@ async def login(
     payload = {"id": user.id}
     tokens = jwthandler.get_new_tokens(payload)
     response = JSONResponse(content=tokens)
-    response.set_cookie(key=constants.access_token, value=tokens.get("access_token"))
-    response.set_cookie(key=constants.refresh_token, value=tokens.get("refresh_token"))
+    response.set_cookie(key=constants.ACCESS_TOKEN_NAME, value=tokens.get("access_token"))
+    response.set_cookie(key=constants.REFRESH_TOKEN_NAME, value=tokens.get("refresh_token"))
     return response
 
 
@@ -78,7 +79,7 @@ async def signup(
         )
 
     # 회원 가입이 완료되었으니 JWT 생성
-    payload = {"id": user.id}
+    payload = {"sub": user.id}
     tokens = jwthandler.get_new_tokens(payload)
 
     return tokens
