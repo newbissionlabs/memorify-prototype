@@ -13,3 +13,9 @@ class UserLogin(SQLModel):
 
 class UserCreate(UserLogin):
     name: str | None = Field(default=None, max_length=20)
+
+
+class User(SQLModel):
+    id: int
+    role: str | None
+    permissions: list[str] | None

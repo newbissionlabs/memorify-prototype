@@ -5,6 +5,7 @@ from uuid import uuid4
 import jwt
 from cryptography.fernet import Fernet
 
+
 from app.config import constants
 from app.secrets import FERNET_KEY, JWT_SECRET_KEY
 
@@ -60,7 +61,7 @@ class JWTHandler:
 
         - jti: 토큰 식별 id
         - token_type(type): refresh 고정
-        - iat: 토큰 생성 시간                                                                                                                                                                                                                                                                                                                                                                                                                 
+        - iat: 토큰 생성 시간
         """
         now_utc: datetime = datetime.now(timezone.utc)
 
@@ -79,7 +80,7 @@ class JWTHandler:
     def create_access_token(cls, refresh_token: str) -> str:
         try:
             # 1. 디코드 (유효성 검사 포함)
-            payload = jwt.decode(refresh_token, cls.__secret_key, algorithms=["HS256"])
+            payload = cls.get_payload(refresh_token)
 
             # 2. refresh 타입인지 확인
             if payload.get("type") != "refresh":
@@ -112,6 +113,8 @@ class JWTHandler:
         return EncryptionHandler.encrypt(new_access_token)
 
     @classmethod
-    def get_paload(cls, token: str) -> dict:
-        decrypted_token = EncryptionHandler.decrypt(token)
-        
+    def get_payload(cls, token: str) -> dict:
+        return jwt.decode(token, cls.__secret_key, algorithms=["HS256"])
+
+
+
