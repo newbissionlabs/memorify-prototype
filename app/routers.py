@@ -10,9 +10,13 @@ from sqlmodel import Session, select
 from app.config import constants
 from app.database import DBHandler
 from app.models import User
-from app.schemas import UserCreate as user_create_schema
-from app.schemas import UserLogin as user_login_schema
+from app.schemas import (
+    UserCreate as user_create_schema,
+    UserLogin as user_login_schema,
+    User as user_schema,
+)
 from app.utils import JWTHandler as jwthandler
+from app.services import AuthService
 
 router = APIRouter(prefix="/v1")
 
@@ -39,11 +43,14 @@ async def login(
         )
 
     # 로그인에 성공했으니 JWT 생성
-    payload = {"id": user.id}
-    tokens = jwthandler.get_new_tokens(payload)
+    tokens = jwthandler.get_new_tokens(user.id)
     response = JSONResponse(content=tokens)
-    response.set_cookie(key=constants.ACCESS_TOKEN_NAME, value=tokens.get("access_token"))
-    response.set_cookie(key=constants.REFRESH_TOKEN_NAME, value=tokens.get("refresh_token"))
+    response.set_cookie(
+        key=constants.ACCESS_TOKEN_NAME, value=tokens.get("access_token")
+    )
+    response.set_cookie(
+        key=constants.REFRESH_TOKEN_NAME, value=tokens.get("refresh_token")
+    )
     return response
 
 
@@ -79,8 +86,7 @@ async def signup(
         )
 
     # 회원 가입이 완료되었으니 JWT 생성
-    payload = {"sub": user.id}
-    tokens = jwthandler.get_new_tokens(payload)
+    tokens = jwthandler.get_new_tokens(user.id)
 
     return tokens
 
@@ -88,7 +94,10 @@ async def signup(
 # 단어 등록(여러 단어 한 번에 가능)
 @router.post("/words", tags=["words"])
 async def register_words(
-    *, db: Session = Depends(DBHandler.get_session), data: list[str]
+    *,
+    db: Session = Depends(DBHandler.get_session),
+    user: user_schema = Depends(AuthService.get_user_from_jwt),
+    data: list[str],
 ):
     """
     data: JSON [word, word, word, ....]

@@ -6,7 +6,7 @@ from app.schemas import User
 
 class AuthService:
     @classmethod
-    def get_user_from_jwt(cls, request: Request = Depends()) -> User:
+    def get_user_from_jwt(cls, request: Request) -> User:
         access_token = request.cookies.get(constants.ACCESS_TOKEN_NAME)
         if not access_token:
             raise HTTPException(
@@ -18,7 +18,6 @@ class AuthService:
         decrypted_token = EncryptionHandler.decrypt(access_token)
         # 복호화된 토큰을 분해하기
         payload = JWTHandler.get_payload(decrypted_token)
-
         user = User(
             id=payload["sub"],
             role=payload.get("role"),

@@ -39,7 +39,11 @@ class JWTHandler:
     __secret_key = JWT_SECRET_KEY
 
     @classmethod
-    def get_new_tokens(cls, payload: dict) -> dict:
+    def get_new_tokens(cls, sub: int) -> dict:
+        """
+        sub: user.id
+        """
+        payload = {"sub": str(sub)}
         refresh_token = cls.create_refresh_token(payload)
         access_token = cls.create_access_token(refresh_token)
         encrypted_refresh_token = EncryptionHandler.encrypt(refresh_token)
@@ -68,7 +72,7 @@ class JWTHandler:
         refresh_payload = {
             **payload,
             "type": "refresh",
-            "jti": cls.create_jti(payload["id"]),
+            "jti": cls.create_jti(payload["sub"]),
             "iat": int(now_utc.timestamp()),
             "exp": int((now_utc + timedelta(days=7)).timestamp()),
         }
@@ -91,7 +95,7 @@ class JWTHandler:
             access_payload = {
                 **payload,
                 "type": "access",
-                "jti": cls.create_jti(payload["id"]),
+                "jti": cls.create_jti(payload["sub"]),
                 "iat": int(now_utc.timestamp()),
                 "exp": int((now_utc + timedelta(minutes=15)).timestamp()),
             }
@@ -115,6 +119,3 @@ class JWTHandler:
     @classmethod
     def get_payload(cls, token: str) -> dict:
         return jwt.decode(token, cls.__secret_key, algorithms=["HS256"])
-
-
-
