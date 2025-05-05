@@ -5,6 +5,7 @@ from uuid import uuid4
 import jwt
 from cryptography.fernet import Fernet
 
+from fastapi import HTTPException
 
 from app.config import constants
 from app.secrets import FERNET_KEY, JWT_SECRET_KEY
@@ -97,7 +98,7 @@ class JWTHandler:
                 "type": "access",
                 "jti": cls.create_jti(payload["sub"]),
                 "iat": int(now_utc.timestamp()),
-                "exp": int((now_utc + timedelta(minutes=15)).timestamp()),
+                "exp": int((now_utc + timedelta(seconds=15)).timestamp()),
             }
 
             access_token = jwt.encode(
@@ -118,4 +119,14 @@ class JWTHandler:
 
     @classmethod
     def get_payload(cls, token: str) -> dict:
-        return jwt.decode(token, cls.__secret_key, algorithms=["HS256"])
+        try:
+            payload = jwt.decode(token, cls.__secret_key, algorithms=["HS256"])
+            return payload
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="The token has expired.")
+        except jwt.InvalidSignatureError:
+            raise HTTPException(status_code=401, detail="Invalid token signature.")
+        except jwt.DecodeError:
+            raise HTTPException(status_code=401, detail="Malformed token.")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token.")

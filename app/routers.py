@@ -14,6 +14,7 @@ from app.schemas import (
     UserCreate as user_create_schema,
     UserLogin as user_login_schema,
     User as user_schema,
+    AddWordsRequest,
 )
 from app.utils import JWTHandler as jwthandler
 from app.services import AuthService
@@ -97,18 +98,16 @@ async def register_words(
     *,
     db: Session = Depends(DBHandler.get_session),
     user: user_schema = Depends(AuthService.get_user_from_jwt),
-    data: list[str],
+    words: AddWordsRequest,
 ):
     """
     data: JSON [word, word, word, ....]
     """
     # 1. 단어마다 db에 있는지 조회 (get_or_create)
-    for word in data:
-        print(word)
     # 2. user_word에 추가하기
     # 3. 하나라도 삑사리나면 rollback?
 
-    return {"단어등록": data}
+    return Response(content=None, status_code=status.HTTP_201_CREATED)
 
 
 # 단어상태변경(여러 단어 한 번에 가능)

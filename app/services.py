@@ -24,3 +24,4 @@ class AuthService:
             permissions=payload.get("permissions"),
         )
         return user
+

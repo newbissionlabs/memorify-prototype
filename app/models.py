@@ -3,6 +3,8 @@ from enum import Enum
 
 from sqlmodel import Field, Relationship, SQLModel
 
+from app.schemas import Word as word_schema, AddWordsRequest
+
 
 class BaseModel(SQLModel):
     """
@@ -44,6 +46,18 @@ class Word(BaseModel, table=True):
     pronunciation: str | None = Field(default=None)
 
     users: list["UserWord"] = Relationship(back_populates="words")
+
+    @classmethod
+    def create(cls, request: word_schema) -> "Word":
+        return cls(
+            word=request.word,
+            meaning=request.meaning,
+            pronunciation=request.pronunciation,
+        )
+
+    @classmethod
+    def create_bulk(cls, request: AddWordsRequest) -> list["Word"]:
+        return [cls.create(word) for word in request]
 
 
 class WordStatusEnum(str, Enum):
