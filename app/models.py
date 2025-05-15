@@ -3,7 +3,8 @@ from enum import Enum
 
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.schemas import Word as word_schema, AddWordsRequest
+# from app.schemas import Word as word_schema, AddWordsRequest
+from app.schemas import AddWordsRequest
 
 
 class BaseModel(SQLModel):
@@ -47,13 +48,17 @@ class Word(BaseModel, table=True):
 
     users: list["UserWord"] = Relationship(back_populates="words")
 
+    # 현재 Word 스키마를 없앤 상태 <<< Word를 단순히 word만 포함해서 딱히 필요없어졌음
+    # @classmethod
+    # def create(cls, request: word_schema) -> "Word":
+    #     return cls(
+    #         word=request.word,
+    #         meaning=request.meaning,
+    #         pronunciation=request.pronunciation,
+    #     )
     @classmethod
-    def create(cls, request: word_schema) -> "Word":
-        return cls(
-            word=request.word,
-            meaning=request.meaning,
-            pronunciation=request.pronunciation,
-        )
+    def create(cls, word: str) -> str:
+        return cls(word=word)
 
     @classmethod
     def create_bulk(cls, request: AddWordsRequest) -> list["Word"]:
@@ -75,7 +80,7 @@ class UserWord(BaseModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     user: int = Field(foreign_key="user.id")
     word: int = Field(foreign_key="word.id")
-    status: WordStatusEnum
+    status: WordStatusEnum = Field(default=WordStatusEnum.PENDING)
 
     users: User = Relationship(back_populates="words")
     words: Word = Relationship(back_populates="users")

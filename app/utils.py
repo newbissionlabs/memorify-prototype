@@ -98,7 +98,7 @@ class JWTHandler:
                 "type": "access",
                 "jti": cls.create_jti(payload["sub"]),
                 "iat": int(now_utc.timestamp()),
-                "exp": int((now_utc + timedelta(seconds=15)).timestamp()),
+                "exp": int((now_utc + timedelta(days=1)).timestamp()),
             }
 
             access_token = jwt.encode(

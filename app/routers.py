@@ -9,7 +9,7 @@ from sqlmodel import Session, select
 
 from app.config import constants
 from app.database import DBHandler
-from app.models import User
+from app.models import User, Word
 from app.schemas import (
     UserCreate as user_create_schema,
     UserLogin as user_login_schema,
@@ -18,6 +18,7 @@ from app.schemas import (
 )
 from app.utils import JWTHandler as jwthandler
 from app.services import AuthService
+from app.repository import WordRepository, UserWordRepository
 
 router = APIRouter(prefix="/v1")
 
@@ -98,13 +99,22 @@ async def register_words(
     *,
     db: Session = Depends(DBHandler.get_session),
     user: user_schema = Depends(AuthService.get_user_from_jwt),
-    words: AddWordsRequest,
+    request: AddWordsRequest,
+    word_repo: WordRepository = Depends(WordRepository),
+    user_word_repo: UserWordRepository = Depends(UserWordRepository),
 ):
     """
     data: JSON [word, word, word, ....]
     """
     # 1. 단어마다 db에 있는지 조회 (get_or_create)
+    words: list[Word] = Word.create_bulk(request.words)
+    registed_words = []
+    for word in words:
+        registed_word = word_repo.get_or_create(word)
+        registed_words.append(registed_word)
     # 2. user_word에 추가하기
+    result = user_word_repo.create_multiple(user=user, words=registed_words)
+    print(result)
     # 3. 하나라도 삑사리나면 rollback?
 
     return Response(content=None, status_code=status.HTTP_201_CREATED)

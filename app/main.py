@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 
-from app.middlewares import JWTMiddleware
 from app.routers import router
 from app.secrets import DOCS_PREFIX
 
