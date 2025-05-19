@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 
 TIMEZONE = "Asia/Seoul"
 
@@ -11,3 +12,10 @@ class _Constant:
 
 
 constants = _Constant()
+
+
+class WordStatusEnum(str, Enum):
+    PENDING = "pending"
+    SUCCESS = "success"
+    FAILED = "failed"
+    AMBIGUOUS = "ambiguous"

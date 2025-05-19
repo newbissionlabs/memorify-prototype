@@ -1,10 +1,10 @@
 from datetime import datetime, timezone
-from enum import Enum
 
 from sqlmodel import Field, Relationship, SQLModel
 
 # from app.schemas import Word as word_schema, AddWordsRequest
 from app.schemas import AddWordsRequest
+from app.config import WordStatusEnum
 
 
 class BaseModel(SQLModel):
@@ -63,13 +63,6 @@ class Word(BaseModel, table=True):
     @classmethod
     def create_bulk(cls, request: AddWordsRequest) -> list["Word"]:
         return [cls.create(word) for word in request]
-
-
-class WordStatusEnum(str, Enum):
-    PENDING = "pending"
-    SUCCESS = "success"
-    FAILED = "failed"
-    AMBIGUOUS = "ambiguous"
 
 
 class UserWord(BaseModel, table=True):

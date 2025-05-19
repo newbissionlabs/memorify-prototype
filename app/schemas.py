@@ -1,4 +1,5 @@
 from sqlmodel import Field, SQLModel
+from app.config import WordStatusEnum
 
 
 class UserRead(SQLModel):
@@ -35,3 +36,24 @@ class User(SQLModel):
 # 현재 Word 자체가 단순히 단어만 가져오기 때문에 제외
 class AddWordsRequest(SQLModel):
     words: list[str]
+
+
+class UpdateWord(SQLModel):
+    id: int  # userword id
+    status: WordStatusEnum
+
+
+class UpdateWordsRequest(SQLModel):
+    __root__: dict[int, WordStatusEnum]
+
+
+class UserWord(SQLModel):
+    id: int
+    word: str
+    meaning: str | None
+    pronunciation: str | None
+    status: WordStatusEnum
+
+
+class UserWords(SQLModel):
+    words: list[UserWord]

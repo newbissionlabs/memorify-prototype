@@ -15,6 +15,8 @@ from app.schemas import (
     UserLogin as user_login_schema,
     User as user_schema,
     AddWordsRequest,
+    UpdateWord,
+    UpdateWordsRequest,
 )
 from app.utils import JWTHandler as jwthandler
 from app.services import AuthService
@@ -97,7 +99,6 @@ async def signup(
 @router.post("/words", tags=["words"])
 async def register_words(
     *,
-    db: Session = Depends(DBHandler.get_session),
     user: user_schema = Depends(AuthService.get_user_from_jwt),
     request: AddWordsRequest,
     word_repo: WordRepository = Depends(WordRepository),
@@ -122,8 +123,28 @@ async def register_words(
 
 # 단어상태변경(여러 단어 한 번에 가능)
 @router.patch("/words/status", tags=["words"])
-async def update_words_status():
-    return {"단어 상태 변경": False}
+async def update_words_status(
+    *,
+    _: user_schema = Depends(AuthService.get_user_from_jwt),
+    request: UpdateWordsRequest,
+    user_word_repo: UserWordRepository = Depends(UserWordRepository),
+):
+    # update_words = [
+    #     UpdateWord(id=word_id, status=status)
+    #     for word_id, status in request.__root__.items()
+    # ]
+
+    result = user_word_repo.get_all(request.__root__.keys())
+    if not result:
+        return JSONResponse(
+            content={"error": "일치하는 단어 없음"},
+            status_code=status.HTTP_404_NOT_FOUND,
+        )
+
+    for user_word in result:
+        user_word_repo.update(user_word, request.__root__[user_word.id])
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # 단어장 조회

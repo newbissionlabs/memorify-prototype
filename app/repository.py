@@ -2,6 +2,8 @@ from fastapi import Depends
 from sqlmodel import Session, select
 from app.database import DBHandler
 from app.models import User, Word, UserWord
+from app.schemas import UpdateWord
+from app.config import WordStatusEnum
 
 
 class BaseRepository:
@@ -27,6 +29,25 @@ class WordRepository(BaseRepository):
 
 
 class UserWordRepository(BaseRepository):
+    def get(self, id: int) -> UserWord | None:
+        user_word = None
+        try:
+            user_word = self.session.exec(select(Word).where(UserWord.id == id)).one
+        except:
+            pass
+
+        return user_word
+
+    def get_all(self, ids: list[int]) -> list[UserWord]:
+        user_words = []
+        for temp in ids:
+            user_word = self.get(temp.id)
+            # 넘겨받은 id 중에 없는 것도 존재할 수 있음
+            if user_word:
+                user_words.append(user_word)
+
+        return user_words
+
     def create(self, user: User, word: Word) -> UserWord:
         """
         단일 User와 Word 관계 추가
@@ -77,3 +98,13 @@ class UserWordRepository(BaseRepository):
             self.session.refresh(user_word)
 
         return created_user_words
+
+    def update(self, user_word: UserWord, status: WordStatusEnum) -> None:
+        user_word.status = status
+
+        # user_word가 이미 get 과정에서 가져온 객체이므로 굳이 add 안해도 됨
+        # self.session.add(user_word)
+        self.session.commit()
+
+        # 현재 프로그램상 refresh 객체를 사용하지 않음
+        # self.session.refresh(user_word)
