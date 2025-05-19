@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-from app.config import constants
+from app.config import constants, WordStatusEnum
 from app.database import DBHandler
 from app.models import User, Word
 from app.schemas import (
@@ -15,8 +15,8 @@ from app.schemas import (
     UserLogin as user_login_schema,
     User as user_schema,
     AddWordsRequest,
-    UpdateWord,
-    UpdateWordsRequest,
+    # UpdateWord,
+    # UpdateWordsRequest,
 )
 from app.utils import JWTHandler as jwthandler
 from app.services import AuthService
@@ -126,7 +126,7 @@ async def register_words(
 async def update_words_status(
     *,
     _: user_schema = Depends(AuthService.get_user_from_jwt),
-    request: UpdateWordsRequest,
+    request: dict[int, WordStatusEnum],
     user_word_repo: UserWordRepository = Depends(UserWordRepository),
 ):
     # update_words = [
@@ -134,7 +134,7 @@ async def update_words_status(
     #     for word_id, status in request.__root__.items()
     # ]
 
-    result = user_word_repo.get_all(request.__root__.keys())
+    result = user_word_repo.get_all(request.keys())
     if not result:
         return JSONResponse(
             content={"error": "일치하는 단어 없음"},
@@ -142,7 +142,7 @@ async def update_words_status(
         )
 
     for user_word in result:
-        user_word_repo.update(user_word, request.__root__[user_word.id])
+        user_word_repo.update(user_word, request[user_word.id])
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

@@ -32,7 +32,7 @@ class UserWordRepository(BaseRepository):
     def get(self, id: int) -> UserWord | None:
         user_word = None
         try:
-            user_word = self.session.exec(select(Word).where(UserWord.id == id)).one
+            user_word = self.session.exec(select(UserWord).where(UserWord.id == id)).one()
         except:
             pass
 
@@ -40,8 +40,9 @@ class UserWordRepository(BaseRepository):
 
     def get_all(self, ids: list[int]) -> list[UserWord]:
         user_words = []
-        for temp in ids:
-            user_word = self.get(temp.id)
+        for id in ids:
+            print(id)
+            user_word = self.get(id)
             # 넘겨받은 id 중에 없는 것도 존재할 수 있음
             if user_word:
                 user_words.append(user_word)

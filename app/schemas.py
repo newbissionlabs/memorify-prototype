@@ -43,8 +43,8 @@ class UpdateWord(SQLModel):
     status: WordStatusEnum
 
 
-class UpdateWordsRequest(SQLModel):
-    __root__: dict[int, WordStatusEnum]
+# class UpdateWordsRequest(SQLModel):
+#     __root__: dict[int, WordStatusEnum]
 
 
 class UserWord(SQLModel):
