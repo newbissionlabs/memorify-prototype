@@ -12,6 +12,12 @@ class BaseRepository:
 
 
 class WordRepository(BaseRepository):
+    def get_by_id(self, id: int) -> Word:
+        return self.session.exec(select(Word).where(Word.id == id)).one()
+    
+    def get_all_by_id(self, ids: list[int]) -> list[Word]:
+        return self.session.exec(select(Word).where(Word.id.in_(ids))).all()
+    
     def get_or_create(self, word: Word) -> Word:
         statement = select(Word).where(Word.word == word.word)
         result = self.session.exec(statement).first()
@@ -32,7 +38,9 @@ class UserWordRepository(BaseRepository):
     def get(self, id: int) -> UserWord | None:
         user_word = None
         try:
-            user_word = self.session.exec(select(UserWord).where(UserWord.id == id)).one()
+            user_word = self.session.exec(
+                select(UserWord).where(UserWord.id == id)
+            ).one()
         except:
             pass
 
@@ -48,6 +56,9 @@ class UserWordRepository(BaseRepository):
                 user_words.append(user_word)
 
         return user_words
+
+    def get_users_words(self, user: User) -> list[UserWord]:
+        return self.session.exec(select(UserWord).where(UserWord.user == user.id)).all()
 
     def create(self, user: User, word: Word) -> UserWord:
         """

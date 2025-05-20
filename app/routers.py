@@ -149,13 +149,38 @@ async def update_words_status(
 
 # 단어장 조회
 @router.get("/words", tags=["words"])
-async def get_words():
-    return {"단어조회": False}
+async def get_words(
+    *,
+    user: user_schema = Depends(AuthService.get_user_from_jwt),
+    word_repo: WordRepository = Depends(WordRepository),
+    user_word_repo: UserWordRepository = Depends(UserWordRepository),
+):
+    # user_words에서 user가 등록한 단어목록 가져오기
+    user_words = user_word_repo.get_users_words(user=user)
+    # Word에서 단어 상세정보 가져오기
+    words = word_repo.get_all_by_id([user_word.id for user_word in user_words])
+    result = []
+    for user_word, word in zip(user_words, words):
+        result.append(
+            {
+                "id": user_word.id,
+                "created": user_word.created_at,
+                "word": word.word,
+                "meaning": word.meaning,
+                "pronunciation": word.pronunciation,
+                "status": user_word.status,
+            }
+        )
+    return result
 
 
 # 단어 검증 필요 여부 조회
 @router.get("/verifications/require", tags=["verifications"])
-async def check_verification_requirement():
+async def check_verification_requirement(
+    *,
+    user: user_schema = Depends(AuthService.get_user_from_jwt),
+):
+    # TODO: 유저별로 단어 시험 체크하는 테이블 만들어야 할듯?
     return {"검증 여부": False}
 
 
@@ -173,5 +198,8 @@ async def save_verification_result():
 
 # 검증 내역 조회
 @router.get("/verifications", tags=["verifications"])
-async def verification_result():
+async def verification_result(
+    *,
+    user: user_schema = Depends(AuthService.get_user_from_jwt),
+):
     return {"검증 결과 저장": False}
