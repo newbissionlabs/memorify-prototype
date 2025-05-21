@@ -1,6 +1,7 @@
 # crypto_handler.py
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
+import random, string
 
 import jwt
 from cryptography.fernet import Fernet
@@ -130,3 +131,7 @@ class JWTHandler:
             raise HTTPException(status_code=401, detail="Malformed token.")
         except jwt.InvalidTokenError:
             raise HTTPException(status_code=401, detail="Invalid token.")
+
+
+def generate_code(length):
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))

@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
+from functools import partial
 
 from sqlmodel import Field, Relationship, SQLModel
 
 # from app.schemas import Word as word_schema, AddWordsRequest
 from app.schemas import AddWordsRequest
-from app.config import WordStatusEnum
+from app.config import constants, WordStatusEnum, VerificationStatusEnum
+from app.utils import generate_code
 
 
 class BaseModel(SQLModel):
@@ -77,3 +79,13 @@ class UserWord(BaseModel, table=True):
 
     users: User = Relationship(back_populates="words")
     words: Word = Relationship(back_populates="users")
+
+
+class Verification(BaseModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    code: str = Field(
+        default_factory=partial(generate_code, constants.VERIFICATION_CODE_LENGTH),
+        unique=True,
+    )
+    user: int = Field(foreign_key="user.id")
+    status: VerificationStatusEnum = Field(default=VerificationStatusEnum.PENDING)
