@@ -25,3 +25,9 @@ class AuthService:
         )
         return user
 
+
+class VerificationService:
+    @classmethod
+    def check_require_verification(cls, user: User) -> bool:
+        
+        return False
