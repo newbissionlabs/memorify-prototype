@@ -135,3 +135,7 @@ class JWTHandler:
 
 def generate_code(length):
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
+
+def check_word():
+    return
