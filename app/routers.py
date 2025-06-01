@@ -53,12 +53,8 @@ async def login(
     # 로그인에 성공했으니 JWT 생성
     tokens = jwthandler.get_new_tokens(user.id)
     response = JSONResponse(content=tokens)
-    response.set_cookie(
-        key=constants.ACCESS_TOKEN_NAME, value=tokens.get("access_token")
-    )
-    response.set_cookie(
-        key=constants.REFRESH_TOKEN_NAME, value=tokens.get("refresh_token")
-    )
+    response.set_cookie(key=constants.ACCESS_TOKEN_NAME, value=tokens["access_token"])
+    response.set_cookie(key=constants.REFRESH_TOKEN_NAME, value=tokens["refresh_token"])
     return response
 
 
@@ -94,6 +90,7 @@ async def signup(
         )
 
     # 회원 가입이 완료되었으니 JWT 생성
+    assert user.id is not None, "user.id는 설계상 None이 될 수 없습니다." #disable pylance error 
     tokens = jwthandler.get_new_tokens(user.id)
 
     return tokens
@@ -112,7 +109,7 @@ async def register_words(
     data: JSON [word, word, word, ....]
     """
     # 1. 단어마다 db에 있는지 조회 (get_or_create)
-    words: list[Word] = Word.create_bulk(request.words)
+    words: list[Word] = Word.create_bulk(request)
     registed_words = []
     for word in words:
         registed_word = word_repo.get_or_create(word)

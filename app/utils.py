@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 import random, string
+from typing import Any
 
 import jwt
 from cryptography.fernet import Fernet
@@ -41,7 +42,7 @@ class JWTHandler:
     __secret_key: str = JWT_SECRET_KEY
 
     @classmethod
-    def get_new_tokens(cls, sub: int) -> dict:
+    def get_new_tokens(cls, sub: int) -> dict[str, str]:
         """
         sub: user.id
         """

@@ -59,12 +59,12 @@ class Word(BaseModel, table=True):
     #         pronunciation=request.pronunciation,
     #     )
     @classmethod
-    def create(cls, word: str) -> str:
+    def create(cls, word: str) -> "Word":
         return cls(word=word)
 
     @classmethod
     def create_bulk(cls, request: AddWordsRequest) -> list["Word"]:
-        return [cls.create(word) for word in request]
+        return [cls.create(word) for word in request.words]
 
 
 class UserWord(BaseModel, table=True):

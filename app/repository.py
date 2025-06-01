@@ -2,7 +2,7 @@ from fastapi import Depends
 from sqlmodel import Session, select
 from app.database import DBHandler
 from app.models import User, Word, UserWord
-from app.schemas import UpdateWord
+from app.schemas import UpdateWord, User as user_schema
 from app.config import WordStatusEnum
 
 
@@ -14,10 +14,10 @@ class BaseRepository:
 class WordRepository(BaseRepository):
     def get_by_id(self, id: int) -> Word:
         return self.session.exec(select(Word).where(Word.id == id)).one()
-    
+
     def get_all_by_id(self, ids: list[int]) -> list[Word]:
         return self.session.exec(select(Word).where(Word.id.in_(ids))).all()
-    
+
     def get_or_create(self, word: Word) -> Word:
         statement = select(Word).where(Word.word == word.word)
         result = self.session.exec(statement).first()
@@ -57,8 +57,10 @@ class UserWordRepository(BaseRepository):
 
         return user_words
 
-    def get_users_words(self, user: User) -> list[UserWord]:
-        return self.session.exec(select(UserWord).where(UserWord.user == user.id)).all()
+    def get_users_words(self, user: user_schema) -> list[UserWord]:
+        return list(
+            self.session.exec(select(UserWord).where(UserWord.user == user.id)).all()
+        )
 
     def create(self, user: User, word: Word) -> UserWord:
         """
@@ -72,7 +74,7 @@ class UserWordRepository(BaseRepository):
                 f"UserWord relation for user {user.id} and word {word.id} already exists"
             )
 
-        user_word = UserWord(user=user.id, word=word.id)
+        user_word = UserWord(user=user_schema.id, word=word.id)
         self.session.add(user_word)
         self.session.commit()
         self.session.refresh(user_word)
