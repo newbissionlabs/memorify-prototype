@@ -21,7 +21,7 @@ from app.secrets import FERNET_KEY, JWT_SECRET_KEY
 class EncryptionHandler:
     # __fernet_key = Fernet.generate_key()
     __fernet_key = FERNET_KEY.encode()
-    __fernet = Fernet(__fernet_key)
+    __fernet = Fernet(__fernet_key if __fernet_key else "")
 
     @classmethod
     def encrypt(cls, data: str) -> str:
@@ -38,7 +38,7 @@ class EncryptionHandler:
 
 class JWTHandler:
     # __secret_key = Fernet.generate_key()
-    __secret_key = JWT_SECRET_KEY
+    __secret_key: str = JWT_SECRET_KEY
 
     @classmethod
     def get_new_tokens(cls, sub: int) -> dict:
@@ -61,7 +61,7 @@ class JWTHandler:
         return f"{id}-{uuid4()}"
 
     @classmethod
-    def create_refresh_token(cls, payload: str) -> str:
+    def create_refresh_token(cls, payload: dict[str, str]) -> str:
         """
         payload에 필요한 정보를 추가후 refresh 토큰 생성
 

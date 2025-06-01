@@ -37,7 +37,7 @@ async def login(
             select(User).where(
                 User.user_id == data.user_id, User.password == data.password
             )
-        ).first()
+        ).one()
     except IntegrityError as e:
         print("@@@@@@@@@@@@@@@@fail@@@@@@@@@@@@@@")
         db.rollback()
@@ -46,6 +46,10 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST, content={"error": error}
         )
 
+    if user is None or user.id is None:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content={"error": "No User"}
+        )
     # 로그인에 성공했으니 JWT 생성
     tokens = jwthandler.get_new_tokens(user.id)
     response = JSONResponse(content=tokens)
